@@ -1,11 +1,25 @@
-cmake_minimum_required(VERSION 3.13.0)
-project(hello VERSION 0.1.0 LANGUAGES C CXX)
+cmake_minimum_required(VERSION 3.28)
+project(hello_qml VERSION 0.1.0 LANGUAGES CXX)
 
-include(CTest)
-enable_testing()
+set(CMAKE_CXX_STANDARD 20)
 
-add_executable(hello1 main.cpp)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-set(CPACK_PROJECT_NAME ${PROJECT_NAME})
-set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
-include(CPack)
+execute_process(
+    COMMAND conan install ${CMAKE_SOURCE_DIR} --build=missing --output-folder=${CMAKE_BINARY_DIR} -s build_type=Debug
+)
+
+find_package(Qt6 COMPONENTS Core Gui Widgets  REQUIRED)
+qt_standard_project_setup()
+
+add_executable(${PROJECT_NAME} main.cpp)
+target_link_libraries(${PROJECT_NAME} 
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Widgets
+)
+
+add_custom_command(TARGET ${PROJECT_NAME}  POST_BUILD
+    COMMAND "${WINDEPLOYQT_EXECUTABLE}" "$<TARGET_FILE:${PROJECT_NAME}>"
+    COMMENT "Running windeployqt..."
+)
